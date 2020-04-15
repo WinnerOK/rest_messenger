@@ -17,14 +17,13 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 # =========================================================================
-def is_same_sender(instance, validated_data):
-    return instance.sender == validated_data["sender"]
-
-
 class MessageUpdateSerializer(serializers.ModelSerializer):
+    @staticmethod
+    def is_same_sender(instance, validated_data):
+        return instance.sender == validated_data["sender"]
 
     def update(self, instance, validated_data):
-        if is_same_sender(instance, validated_data):
+        if MessageUpdateSerializer.is_same_sender(instance, validated_data):
             instance.text = validated_data["text"]
             instance.save()
             return instance
@@ -46,10 +45,14 @@ class MessageDestroySerializer(serializers.ModelSerializer):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance):  # noqa
         instance.delete()
 
     class Meta:
         model = Message
         fields = ["text", "sender", "receiver", "created_at", "updated_at"]
         read_only_fields = ["receiver", "created_at", "updated_at"]
+
+
+class UserAuthenticationSerializer(serializers.Serializer):  # noqa
+    user = serializers.UUIDField()
