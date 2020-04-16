@@ -1,25 +1,18 @@
-from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets, mixins
+from rest_framework import mixins, viewsets, status
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import NotAuthenticated
+from rest_framework.exceptions import NotAuthenticated, NotFound
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from .models import Person, Message
-from .serializers import PersonSerializer, MessageSerializer, MessageUpdateSerializer, MessageDestroySerializer, \
-    UserAuthenticationSerializer
-
-
-class PersonViewSet(mixins.CreateModelMixin,
-                    mixins.RetrieveModelMixin,
-                    viewsets.GenericViewSet):
-    serializer_class = PersonSerializer
-    queryset = Person.objects.all()
+from messenger.models import Message
+from messenger.models.person import Person
+from messenger.serializers.messageSerializers import MessageUpdateSerializer, MessageDestroySerializer, \
+    MessageSerializer
+from messenger.serializers.personSerializers import UserAuthenticationSerializer
 
 
+# According to RFC, request body must be ignored in GET, DELETE methods, so I replaced them with POST
 class MessageView(mixins.CreateModelMixin,
-                  mixins.DestroyModelMixin,
                   viewsets.GenericViewSet):
     queryset = Message.objects.all()
 
@@ -63,9 +56,8 @@ def validate_person(request_data) -> Person:
     operation_id="messages_receive",
 )
 @api_view(["POST"])
-def message_get(request):
+def message_get_received(request):
     person = validate_person(request.data)
-    # sent = Message.objects.filter(sender__id__exact=person.id)
     received = Message.objects.filter(receiver__id__exact=person.id).order_by("created_at")
     out = MessageSerializer(data=received, many=True)
     out.is_valid()
@@ -79,7 +71,7 @@ def message_get(request):
     operation_id="messages_sent",
 )
 @api_view(["POST"])
-def message_get(request):
+def message_get_sent(request):
     person = validate_person(request.data)
     sent = Message.objects.filter(sender__id__exact=person.id).order_by("created_at")
     out = MessageSerializer(data=sent, many=True)
@@ -87,6 +79,24 @@ def message_get(request):
     return Response(out.data)
 
 
-class PingView(APIView):
-    def get(self, request):
-        return JsonResponse({"pong": True})
+@swagger_auto_schema(
+    method='POST',
+    request_body=UserAuthenticationSerializer,
+    responses={200: MessageSerializer},
+    operation_id="messages_destroy",
+)
+@api_view(["POST"])
+def message_destroy(request, pk, *args, **kwargs):
+    person = validate_person(request.data)
+    if person is None:
+        raise NotAuthenticated(detail="User with given uuid doesn't exist")
+
+    message = Message.objects.filter(id__exact=pk).first()
+    if message is None:
+        raise NotFound(detail="Message with given uuid doesn't exist")
+
+    if person.id == message.sender.id:
+        message.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        raise NotAuthenticated(detail="Deleting other's messages is prohibited")
