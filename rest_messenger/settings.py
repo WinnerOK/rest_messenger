@@ -19,14 +19,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'y^7=)unz9##y+e$%u@ib4514lpiwz)n1=!r5-@-mahdjs7^%qy'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", False)
 
 ALLOWED_HOSTS = ["localhost"]
 
-APPEND_SLASH = False
 
 # Application definition
 
@@ -84,21 +83,13 @@ WSGI_APPLICATION = 'rest_messenger.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     "ENGINE": 'django.db.backends.postgresql',
-    #     "USER": os.getenv("POSTGRES_USER"),
-    #     "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-    #     'NAME': os.getenv("POSTGRES_DB"),
-    #     "HOST": os.getenv("POSTGRES_HOST"),
-    #     "PORT": os.getenv("POSTGRES_PORT"),
-    # }
     'default': {
         "ENGINE": 'django.db.backends.postgresql',
-        "USER": "u2b3jjhfuk45nfgm",
-        "PASSWORD": "uphjyfcqd2qnvd7e",
-        'NAME': "messenger_db",
-        "HOST": "localhost",
-        "PORT": "5555",
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        'NAME': os.getenv("POSTGRES_DB"),
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": os.getenv("POSTGRES_PORT"),
     }
 }
 
