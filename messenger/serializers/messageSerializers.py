@@ -12,6 +12,10 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class MessageUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for partial update.
+    Update message if appropriate sender is passed
+    """
     def update(self, instance, validated_data):
         if instance.sender == validated_data["sender"]:
             instance.text = validated_data["text"]
@@ -29,7 +33,9 @@ class MessageUpdateSerializer(serializers.ModelSerializer):
 
 
 class MessageDestroySerializer(serializers.ModelSerializer):
-
+    """
+    Destroy message if its sender is passed
+    """
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.sender == self.validated_data["sender"]:

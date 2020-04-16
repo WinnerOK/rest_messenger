@@ -10,4 +10,7 @@ class PersonSerializer(serializers.ModelSerializer):
 
 
 class UserAuthenticationSerializer(serializers.Serializer):  # noqa
+    """
+    Serialize person by uuid
+    """
     user = serializers.UUIDField()

@@ -1,3 +1,5 @@
+from typing import Dict
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets, status
 from rest_framework.decorators import api_view
@@ -10,18 +12,25 @@ from messenger.serializers.messageSerializers import MessageUpdateSerializer, Me
     MessageSerializer
 from messenger.serializers.personSerializers import UserAuthenticationSerializer
 
+"""
+Big problem with messages is a desire to authenticate user by id sent with every request in body.
 
-# According to RFC, request body must be ignored in GET, DELETE methods, so I replaced them with POST
+It will be better to create custom authorization class in Django which will be responsible for user authentication
+by id in cookie or header, so that we get rid of 'hacking' default in-built serializers and mixins. 
+"""
+
+
 class MessageView(mixins.CreateModelMixin,
                   viewsets.GenericViewSet):
+    """
+    Since we have to proceed id in body, I left standard Creation mixin and a partial update.
+    """
     queryset = Message.objects.all()
 
     def get_serializer_class(self):
         if hasattr(self, "action"):
             if self.action == 'partial_update':
                 return MessageUpdateSerializer
-            elif self.action == 'destroy':
-                return MessageDestroySerializer
 
         return MessageSerializer
 
@@ -40,7 +49,13 @@ class MessageView(mixins.CreateModelMixin,
         return Response(serializer.data)
 
 
-def validate_person(request_data) -> Person:
+def validate_person(request_data: Dict[str, str]) -> Person:
+    """
+    Return Person object from the DB if exists, otherwise NotAuthenticated raised/
+
+    :param request_data: {"user": "uuid"}
+    :return: corresponding Person object
+    """
     serializer = UserAuthenticationSerializer(data=request_data)
     serializer.is_valid(raise_exception=True)
     person = Person.objects.filter(id=serializer.validated_data["user"]).first()
@@ -56,7 +71,11 @@ def validate_person(request_data) -> Person:
     operation_id="messages_receive",
 )
 @api_view(["POST"])
+# Body in GET and DELETE requests should be ignored, I decided to make post request for this and following ops.
 def message_get_received(request):
+    """
+    Return all messages received by person with given in body uuid.
+    """
     person = validate_person(request.data)
     received = Message.objects.filter(receiver__id__exact=person.id).order_by("created_at")
     out = MessageSerializer(data=received, many=True)
@@ -72,6 +91,9 @@ def message_get_received(request):
 )
 @api_view(["POST"])
 def message_get_sent(request):
+    """
+    Return all messages sent by person with given in body uuid.
+    """
     person = validate_person(request.data)
     sent = Message.objects.filter(sender__id__exact=person.id).order_by("created_at")
     out = MessageSerializer(data=sent, many=True)
@@ -86,7 +108,14 @@ def message_get_sent(request):
     operation_id="messages_destroy",
 )
 @api_view(["POST"])
-def message_destroy(request, pk, *args, **kwargs):
+def message_destroy(request, pk):
+    """
+    Remove message from the DB if sender requested deletion.
+
+    :param request: user request with {"user": "uuid"} inside body
+    :param pk: primary key of Message
+    :return:
+    """
     person = validate_person(request.data)
     if person is None:
         raise NotAuthenticated(detail="User with given uuid doesn't exist")

@@ -16,6 +16,12 @@ client = Client()
 class MessageTest(TestCase):
     @staticmethod
     def stringify_messages(response_messages: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+        """
+        Changes all values in dict to str, otherwise an exception is raised.
+
+        :param response_messages: list of Message from response
+        :return: the same list of Message, but all values converted to str
+        """
         response_data = []
         for msg in response_messages:
             stringified_msg = {}
@@ -26,6 +32,13 @@ class MessageTest(TestCase):
 
     def assert_messages_equal(self, db_messages: List[Message], response_data: List[Dict[str, Any]],
                               serializer: Serializer = MessageSerializer) -> None:
+        """
+        Check equality between db_messages and response_data
+
+        :param db_messages: List of Message obtained from DB.
+        :param response_data: List of Message from a server
+        :param serializer: Serializer for db_messages
+        """
         serialized = serializer(db_messages, many=True)  # noqa
         self.assertEqual(len(response_data), len(db_messages))
         response_data = MessageTest.stringify_messages(response_data)
@@ -49,6 +62,7 @@ class MessageTest(TestCase):
         data = resp.data
         msg = Message.objects.filter(id__exact=data["id"]).first()
         serializer = MessageSerializer(msg)
+
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertEqual(serializer.data, data)
         self.assertTrue(
