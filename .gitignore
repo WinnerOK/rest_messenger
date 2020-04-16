@@ -98,7 +98,7 @@ celerybeat-schedule
 
 # Environments
 .env
-.venv
+rest_messenger/.venv
 env/
 venv/
 ENV/
