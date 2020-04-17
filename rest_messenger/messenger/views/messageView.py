@@ -43,7 +43,7 @@ class MessageView(mixins.CreateModelMixin,
 
         return MessageSerializer
 
-    def partial_update(self, request):
+    def partial_update(self, request, *args, **kwargs):
         """
         Update message text given uuid of message and uuid of sender
 
