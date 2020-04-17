@@ -25,6 +25,20 @@ endpoints were converted to `POST`.
 * `SECRET_KEY` - a secret key used in Django
 * `DEBUG` - if set, enables debug mode in Django. (**Do not use in production**)
 
+### Example
+Possible `.env` file is present below, 
+but it is strongly recommended to generate credentials by yourself.
+```
+# docker-compose variables
+POSTGRES_TAG=12
+SERVER_PORT=8888
+# services variables
+POSTGRES_USER=xxe6o60v1bk74od3
+POSTGRES_PASSWORD=w173y8azo6ywdi20
+POSTGRES_DB=messenger_db
+SECRET_KEY=s3J4gqfJD36tY82PyhhwX9gL4udT6ZT3u3hZp9PeVmLGWgvRtb
+DEBUG=
+```
 ## Run tests
 To run tests execute the following command:
 ```
