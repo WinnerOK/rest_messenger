@@ -1,5 +1,6 @@
 from typing import Dict
 
+from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets, status
 from rest_framework.decorators import api_view
@@ -20,6 +21,14 @@ by id in cookie or header, so that we get rid of 'hacking' default in-built seri
 """
 
 
+@method_decorator(name="create", decorator=swagger_auto_schema(
+    operation_summary="Create new message",
+    operation_description=':param request: body: {'
+                          '  "text": "string",'
+                          '  "sender": "uuid",'
+                          '  "receiver": "uuid"'
+                          '}'
+))
 class MessageView(mixins.CreateModelMixin,
                   viewsets.GenericViewSet):
     """
@@ -34,7 +43,13 @@ class MessageView(mixins.CreateModelMixin,
 
         return MessageSerializer
 
-    def partial_update(self, request, *args, **kwargs):
+    def partial_update(self, request):
+        """
+        Update message text given uuid of message and uuid of sender
+
+        :param request: body: {"sender": "uuid", "text": "string"}
+        :return:
+        """
         partial = True
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -75,6 +90,8 @@ def validate_person(request_data: Dict[str, str]) -> Person:
 def message_get_received(request):
     """
     Return all messages received by person with given in body uuid.
+
+    :param request: user request with {"user": "uuid"} inside body
     """
     person = validate_person(request.data)
     received = Message.objects.filter(receiver__id__exact=person.id).order_by("created_at")
@@ -93,6 +110,8 @@ def message_get_received(request):
 def message_get_sent(request):
     """
     Return all messages sent by person with given in body uuid.
+
+    :param request: user request with {"user": "uuid"} inside body
     """
     person = validate_person(request.data)
     sent = Message.objects.filter(sender__id__exact=person.id).order_by("created_at")
@@ -114,7 +133,6 @@ def message_destroy(request, pk):
 
     :param request: user request with {"user": "uuid"} inside body
     :param pk: primary key of Message
-    :return:
     """
     person = validate_person(request.data)
     if person is None:

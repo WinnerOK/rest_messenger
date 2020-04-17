@@ -32,3 +32,7 @@ services:
       - POSTGRES_DB
       - SECRET_KEY
       - DEBUG
+#   Having the following volume is suitable for work in debug mode
+#   But unacceptable in production
+#    volumes:
+#    - ./rest_messenger:/code

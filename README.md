@@ -33,4 +33,4 @@ docker exec -it rest_messenger bash -c './manage.py test'
 
 ## API documentation
 To see API documentation refer to Swagger UI at `localhost:<${SERVER_PORT}>/api/swagger/`
-![](https://i.imgur.com/s5fcGN2.jpg)
+![](https://i.imgur.com/TNwy1e0.png)
